@@ -16,7 +16,7 @@ Solo builders running AI agents often lose track of token spend until the invoic
 
 ```bash
 # Option A — run the script directly (no install)
-git clone <repo-url> agent-cost-logger
+git clone https://github.com/ray0840/agent-cost-logger.git
 cd agent-cost-logger
 python3 cost_logger.py --help
 
@@ -66,7 +66,7 @@ python3 cost_logger.py summarize --file example_data.jsonl
 python3 cost_logger.py summarize --file example_data.jsonl --by day
 python3 cost_logger.py summarize --file example_data.jsonl --by week
 python3 cost_logger.py summarize --file example_data.jsonl --by-model
-python3 cost_logger.py summarize --file my_spend.jsonl --since 2026-09-08T00:00:00Z
+python3 cost_logger.py summarize --file example_data.jsonl --since 2026-09-08T00:00:00Z
 ```
 
 Append a row from an agent wrapper:
@@ -74,6 +74,11 @@ Append a row from an agent wrapper:
 ```bash
 echo '{"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","model":"gpt-4o-mini","tokens_in":1000,"tokens_out":200,"usd":0.00027}' >> spend.jsonl
 ```
+
+## Same family (cross-links)
+
+- **Solo AI Agent Operator Kit** (free sample + Pages landing): https://github.com/ray0840/solo-ai-agent-operator-kit · https://ray0840.github.io/solo-ai-agent-operator-kit/
+- **VPS AI Agent Security Hardening Checklist** (free sample): https://github.com/ray0840/vps-ai-agent-security-checklist
 
 ## Notes
 
