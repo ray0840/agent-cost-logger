@@ -16,6 +16,8 @@ jobs:
           python-version: "3.12"
       - name: Syntax check
         run: python -m py_compile cost_logger.py
+      - name: Unit tests (summarize totals + export CSV)
+        run: python -m unittest discover -s . -p 'test_*.py' -v
       - name: Summarize smoke (example_data.jsonl)
         run: python cost_logger.py summarize --file example_data.jsonl
       - name: Export CSV smoke (example_data.jsonl)

@@ -113,6 +113,7 @@ Typical weekly habit: append from your agent loop, then run `summarize` once a w
 - Ops hygiene tool, **not** a billing system of record. Reconcile against provider invoices weekly.
 - Never commit live API keys alongside your spend log.
 - Sponsors / Polar tiers: see `docs/SPONSORS_DRAFT.md` (**draft only** — not live).
+- GitHub Sponsors: not enabled yet.
 
 ## License
 
