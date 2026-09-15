@@ -9,6 +9,7 @@ Human review welcome. Review and adapt before production use.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from collections import defaultdict
@@ -142,33 +143,81 @@ def print_totals(rows: List[Dict[str, Any]]) -> None:
     print(f"Estimated:   {estimated} row(s) used fallback rates")
 
 
-def cmd_summarize(args: argparse.Namespace) -> int:
+def model_aggregate(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
+    model_buckets: Dict[str, Dict[str, float]] = defaultdict(
+        lambda: {"tokens_in": 0.0, "tokens_out": 0.0, "usd": 0.0, "rows": 0.0, "estimated": 0.0}
+    )
+    for row in rows:
+        b = model_buckets[row["model"]]
+        b["tokens_in"] += row["tokens_in"]
+        b["tokens_out"] += row["tokens_out"]
+        b["usd"] += row["usd"]
+        b["rows"] += 1
+        if row["usd_estimated"]:
+            b["estimated"] += 1
+    return dict(sorted(model_buckets.items()))
+
+
+CSV_FIELDS = ("section", "bucket", "rows", "tokens_in", "tokens_out", "usd", "estimated")
+
+
+def write_csv_buckets(
+    writer: csv.DictWriter, section: str, buckets: Dict[str, Dict[str, float]]
+) -> None:
+    for key, b in buckets.items():
+        writer.writerow(
+            {
+                "section": section,
+                "bucket": key,
+                "rows": int(b["rows"]),
+                "tokens_in": int(b["tokens_in"]),
+                "tokens_out": int(b["tokens_out"]),
+                "usd": f"{b['usd']:.6f}",
+                "estimated": int(b["estimated"]),
+            }
+        )
+
+
+def load_filtered_rows(args: argparse.Namespace) -> List[Dict[str, Any]]:
     path = Path(args.file)
     if not path.is_file():
         print(f"error: file not found: {path}", file=sys.stderr)
-        return 1
+        raise SystemExit(1)
     rows = load_rows(path)
     if args.since:
         since = parse_timestamp(args.since)
         rows = [r for r in rows if r["timestamp"] >= since]
+    return rows
+
+
+def cmd_summarize(args: argparse.Namespace) -> int:
+    rows = load_filtered_rows(args)
     print_totals(rows)
     if args.by in ("day", "all"):
         print_section("By day", aggregate(rows, iso_day))
     if args.by in ("week", "all"):
         print_section("By week", aggregate(rows, iso_week))
     if args.by_model:
-        model_buckets: Dict[str, Dict[str, float]] = defaultdict(
-            lambda: {"tokens_in": 0.0, "tokens_out": 0.0, "usd": 0.0, "rows": 0.0, "estimated": 0.0}
-        )
-        for row in rows:
-            b = model_buckets[row["model"]]
-            b["tokens_in"] += row["tokens_in"]
-            b["tokens_out"] += row["tokens_out"]
-            b["usd"] += row["usd"]
-            b["rows"] += 1
-            if row["usd_estimated"]:
-                b["estimated"] += 1
-        print_section("By model", dict(sorted(model_buckets.items())))
+        print_section("By model", model_aggregate(rows))
+    return 0
+
+
+def cmd_export(args: argparse.Namespace) -> int:
+    """Write day/week/model summaries as CSV to stdout or --output file."""
+    rows = load_filtered_rows(args)
+    out_fh = open(args.output, "w", encoding="utf-8", newline="") if args.output else sys.stdout
+    try:
+        writer = csv.DictWriter(out_fh, fieldnames=CSV_FIELDS)
+        writer.writeheader()
+        if args.by in ("day", "all"):
+            write_csv_buckets(writer, "day", aggregate(rows, iso_day))
+        if args.by in ("week", "all"):
+            write_csv_buckets(writer, "week", aggregate(rows, iso_week))
+        if args.by_model or args.by == "all":
+            write_csv_buckets(writer, "model", model_aggregate(rows))
+    finally:
+        if args.output:
+            out_fh.close()
     return 0
 
 
@@ -208,6 +257,38 @@ def build_parser() -> argparse.ArgumentParser:
         help="Only include rows on/after this ISO timestamp",
     )
     summarize.set_defaults(func=cmd_summarize)
+
+    export = sub.add_parser(
+        "export",
+        help="Write day/week/model summaries as CSV (stdout or --output)",
+    )
+    export.add_argument(
+        "--file",
+        "-f",
+        required=True,
+        help="Path to JSONL spend log",
+    )
+    export.add_argument(
+        "--by",
+        choices=("day", "week", "all"),
+        default="all",
+        help="Which sections to include (default: all = day+week+model)",
+    )
+    export.add_argument(
+        "--by-model",
+        action="store_true",
+        help="Include model section when --by is day or week",
+    )
+    export.add_argument(
+        "--since",
+        help="Only include rows on/after this ISO timestamp",
+    )
+    export.add_argument(
+        "--output",
+        "-o",
+        help="Write CSV to this path (default: stdout)",
+    )
+    export.set_defaults(func=cmd_export)
     return parser
 
 

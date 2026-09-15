@@ -78,7 +78,18 @@ python3 cost_logger.py summarize --file example_data.jsonl --by-model
 
 # Filter to rows on/after a timestamp
 python3 cost_logger.py summarize --file example_data.jsonl --since 2026-09-08T00:00:00Z
+
+# CSV export (day + week + model) to stdout
+python3 cost_logger.py export --file example_data.jsonl
+
+# CSV to a file; day-only; model section with --by-model
+python3 cost_logger.py export --file example_data.jsonl -o spend.csv
+python3 cost_logger.py export --file example_data.jsonl --by day
+python3 cost_logger.py export --file example_data.jsonl --by week --by-model
 ```
+
+CSV columns: `section`, `bucket`, `rows`, `tokens_in`, `tokens_out`, `usd`, `estimated`.
+With `--by all` (default), `section` is `day`, `week`, and `model`.
 
 Append a row from an agent wrapper:
 
