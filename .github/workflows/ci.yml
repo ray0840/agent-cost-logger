@@ -22,3 +22,7 @@ jobs:
         run: python cost_logger.py summarize --file example_data.jsonl
       - name: Export CSV smoke (example_data.jsonl)
         run: python cost_logger.py export --file example_data.jsonl
+      - name: Budget smoke (under / over exit codes)
+        run: |
+          python cost_logger.py budget --file example_data.jsonl --limit 2.00
+          ! python cost_logger.py budget --file example_data.jsonl --limit 1.00

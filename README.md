@@ -86,7 +86,16 @@ python3 cost_logger.py export --file example_data.jsonl
 python3 cost_logger.py export --file example_data.jsonl -o spend.csv
 python3 cost_logger.py export --file example_data.jsonl --by day
 python3 cost_logger.py export --file example_data.jsonl --by week --by-model
+
+# Budget check (exit 0 under/at limit, exit 1 over) — offline threshold alerts
+python3 cost_logger.py budget --file example_data.jsonl --limit 1.00
+python3 cost_logger.py budget --file example_data.jsonl --limit 2.00 --period all
+python3 cost_logger.py budget --file example_data.jsonl --limit 1.00 --period day
+python3 cost_logger.py budget --file example_data.jsonl --limit 5 --period week
+python3 cost_logger.py budget --file example_data.jsonl --limit 10 --period all --since 2026-09-08T00:00:00Z
 ```
+
+`budget` with `--period day` or `week` uses the **latest UTC day/ISO week present in the filtered log** (not wall-clock today), so sample data and CI stay deterministic. Exit `2` on usage/input errors (bad `--limit`, missing file).
 
 CSV columns: `section`, `bucket`, `rows`, `tokens_in`, `tokens_out`, `usd`, `estimated`.
 With `--by all` (default), `section` is `day`, `week`, and `model`.
@@ -97,7 +106,7 @@ Append a row from an agent wrapper:
 echo '{"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","model":"gpt-4o-mini","tokens_in":1000,"tokens_out":200,"usd":0.00027}' >> spend.jsonl
 ```
 
-Typical weekly habit: append from your agent loop, then run `summarize` once a week against a soft budget. If over, drop model tier or pause non-critical jobs.
+Typical weekly habit: append from your agent loop, then run `summarize` and/or `budget --limit …` once a week. If over, drop model tier or pause non-critical jobs.
 
 ## Write-up
 
@@ -117,7 +126,7 @@ Typical weekly habit: append from your agent loop, then run `summarize` once a w
 
 ## Waitlist: tiny hosted spend dashboard
 
-Demand check only — **nothing hosted yet**. If you would use a small dashboard that charts this JSONL (day/week/model) plus optional budget alerts, open an issue with the waitlist template:
+Offline `budget` checks thresholds locally today; hosted charts/alerts come later if demand shows up. Demand check only — **nothing hosted yet**. If you would use a small dashboard that charts this JSONL (day/week/model) plus optional budget alerts, open an issue with the waitlist template:
 
 → [Waitlist — Agent Spend Dashboard](https://github.com/ray0840/agent-cost-logger/issues/new?template=waitlist-spend-dashboard.yml)
 

@@ -15,7 +15,7 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 # Simple fallback rates (USD per 1M tokens) when "usd" is missing.
 # Documented in README — adjust to your provider's pricing.
@@ -221,6 +221,76 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def select_budget_rows(rows: List[Dict[str, Any]], period: str) -> Tuple[str, List[Dict[str, Any]]]:
+    """Pick rows for the budget window.
+
+    day/week use the latest timestamp present in *rows* (after --since),
+    so checks are clock-independent and work with example_data.jsonl.
+    """
+    if period == "all":
+        return "all", list(rows)
+    latest = max(r["timestamp"] for r in rows)
+    if period == "day":
+        label = iso_day(latest)
+        selected = [r for r in rows if iso_day(r["timestamp"]) == label]
+        return f"day {label}", selected
+    if period == "week":
+        label = iso_week(latest)
+        selected = [r for r in rows if iso_week(r["timestamp"]) == label]
+        return f"week {label}", selected
+    raise ValueError(f"unknown period: {period}")
+
+
+def cmd_budget(args: argparse.Namespace) -> int:
+    """Compare filtered spend to a USD limit; exit 1 when over budget."""
+    if args.limit is None or args.limit <= 0:
+        print("error: --limit must be a positive number (USD)", file=sys.stderr)
+        return 2
+    path = Path(args.file)
+    if not path.is_file():
+        print(f"error: file not found: {path}", file=sys.stderr)
+        return 2
+    try:
+        rows = load_rows(path)
+    except SystemExit as exc:
+        # Treat parse/schema failures as usage/input errors (exit 2).
+        code = exc.code
+        msg = code if isinstance(code, str) else (str(code) if code else "")
+        if msg:
+            print(msg, file=sys.stderr)
+        return 2
+    if args.since:
+        try:
+            since = parse_timestamp(args.since)
+        except (TypeError, ValueError) as exc:
+            print(f"error: bad --since timestamp: {exc}", file=sys.stderr)
+            return 2
+        rows = [r for r in rows if r["timestamp"] >= since]
+    if not rows:
+        print("error: no rows to check (empty log or filtered out)", file=sys.stderr)
+        return 2
+    period_label, selected = select_budget_rows(rows, args.period)
+    spent = sum(r["usd"] for r in selected)
+    estimated = sum(1 for r in selected if r["usd_estimated"])
+    limit = float(args.limit)
+    remaining = limit - spent
+    if remaining >= 0:
+        status = "UNDER"
+        delta_label = f"remaining ${remaining:.4f}"
+        exit_code = 0
+    else:
+        status = "OVER"
+        delta_label = f"overage ${-remaining:.4f}"
+        exit_code = 1
+    est_note = f"; {estimated} estimated row(s)" if estimated else "; no estimates"
+    print(
+        f"budget {status}: period={period_label} spent=${spent:.4f} "
+        f"limit=${limit:.4f} {delta_label}{est_note}"
+    )
+    return exit_code
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cost_logger.py",
@@ -289,6 +359,38 @@ def build_parser() -> argparse.ArgumentParser:
         help="Write CSV to this path (default: stdout)",
     )
     export.set_defaults(func=cmd_export)
+
+    budget = sub.add_parser(
+        "budget",
+        help="Check spend against a USD limit (exit 1 if over)",
+    )
+    budget.add_argument(
+        "--file",
+        "-f",
+        required=True,
+        help="Path to JSONL spend log",
+    )
+    budget.add_argument(
+        "--limit",
+        type=float,
+        required=True,
+        help="USD budget threshold (must be > 0)",
+    )
+    budget.add_argument(
+        "--period",
+        choices=("day", "week", "all"),
+        default="all",
+        help=(
+            "Window to check (default: all). "
+            "day/week use the latest timestamp present in the filtered log."
+        ),
+    )
+    budget.add_argument(
+        "--since",
+        help="Only include rows on/after this ISO timestamp",
+    )
+    budget.set_defaults(func=cmd_budget)
+
     return parser
 
 

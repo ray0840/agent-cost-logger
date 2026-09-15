@@ -92,5 +92,56 @@ class TestExportCsv(unittest.TestCase):
         self.assertEqual(len(parsed), 5)
 
 
+
+class TestBudget(unittest.TestCase):
+    def test_under_budget_all(self) -> None:
+        args = Namespace(file=str(EXAMPLE), limit=2.00, period="all", since=None)
+        self.assertEqual(cl.cmd_budget(args), 0)
+
+    def test_over_budget_all(self) -> None:
+        args = Namespace(file=str(EXAMPLE), limit=1.00, period="all", since=None)
+        self.assertEqual(cl.cmd_budget(args), 1)
+
+    def test_exact_limit_is_under(self) -> None:
+        # spent == limit counts as UNDER (exit 0)
+        args = Namespace(file=str(EXAMPLE), limit=1.4502, period="all", since=None)
+        self.assertEqual(cl.cmd_budget(args), 0)
+
+    def test_period_day_latest_in_log(self) -> None:
+        # Latest day in example_data is 2026-09-12 (~$0.00387)
+        args = Namespace(file=str(EXAMPLE), limit=0.01, period="day", since=None)
+        self.assertEqual(cl.cmd_budget(args), 0)
+        args_over = Namespace(file=str(EXAMPLE), limit=0.001, period="day", since=None)
+        self.assertEqual(cl.cmd_budget(args_over), 1)
+
+    def test_period_week_latest_in_log(self) -> None:
+        # Latest week is 2026-W37 (~$0.66042)
+        args = Namespace(file=str(EXAMPLE), limit=1.00, period="week", since=None)
+        self.assertEqual(cl.cmd_budget(args), 0)
+        args_over = Namespace(file=str(EXAMPLE), limit=0.50, period="week", since=None)
+        self.assertEqual(cl.cmd_budget(args_over), 1)
+
+    def test_bad_limit_exit_2(self) -> None:
+        args = Namespace(file=str(EXAMPLE), limit=0, period="all", since=None)
+        self.assertEqual(cl.cmd_budget(args), 2)
+        args_neg = Namespace(file=str(EXAMPLE), limit=-1.0, period="all", since=None)
+        self.assertEqual(cl.cmd_budget(args_neg), 2)
+
+    def test_missing_file_exit_2(self) -> None:
+        args = Namespace(file=str(ROOT / "no_such_file.jsonl"), limit=1.0, period="all", since=None)
+        self.assertEqual(cl.cmd_budget(args), 2)
+
+    def test_select_budget_rows_helpers(self) -> None:
+        rows = cl.load_rows(EXAMPLE)
+        label, selected = cl.select_budget_rows(rows, "day")
+        self.assertEqual(label, "day 2026-09-12")
+        self.assertEqual(len(selected), 1)
+        self.assertAlmostEqual(sum(r["usd"] for r in selected), 0.00387, places=5)
+        wlabel, wsel = cl.select_budget_rows(rows, "week")
+        self.assertEqual(wlabel, "week 2026-W37")
+        self.assertEqual(len(wsel), 8)
+
+
+
 if __name__ == "__main__":
     unittest.main()
