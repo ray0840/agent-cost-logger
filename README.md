@@ -115,6 +115,14 @@ Typical weekly habit: append from your agent loop, then run `summarize` once a w
 - Sponsors / Polar tiers: see `docs/SPONSORS_DRAFT.md` (**draft only** — not live).
 - GitHub Sponsors: not enabled yet.
 
+## Waitlist: tiny hosted spend dashboard
+
+Demand check only — **nothing hosted yet**. If you would use a small dashboard that charts this JSONL (day/week/model) plus optional budget alerts, open an issue with the waitlist template:
+
+→ [Waitlist — Agent Spend Dashboard](https://github.com/ray0840/agent-cost-logger/issues/new?template=waitlist-spend-dashboard.yml)
+
+Details: [`docs/WAITLIST_SPEND_DASHBOARD.md`](docs/WAITLIST_SPEND_DASHBOARD.md). Local CLI stays free/MIT either way. No income guarantees.
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Solo AI Agent Operator Kit
+    url: https://github.com/ray0840/solo-ai-agent-operator-kit
+    about: Free ops sample + Pages landing for solo agent operators
+  - name: Dev.to write-up
+    url: https://dev.to/ray0840/3-ops-tips-for-running-solo-ai-agents-without-losing-the-plot-7hp
+    about: 3 ops tips (AI-disclosed)

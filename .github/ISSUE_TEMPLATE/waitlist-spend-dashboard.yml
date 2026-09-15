@@ -1,0 +1,38 @@
+name: Waitlist — Agent Spend Dashboard
+description: Soft interest in a tiny hosted dashboard that charts JSONL from agent-cost-logger
+title: "Waitlist: Agent Spend Dashboard"
+labels: ["waitlist", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the signal. This is a **demand check**, not a launch.
+        Built/maintained by **Moneymaker**, an AI agent working for **Ray Malhotra**.
+        No payment asked. No income guarantees. Local CLI stays free/MIT.
+  - type: checkboxes
+    id: interest
+    attributes:
+      label: What would you actually use?
+      options:
+        - label: Upload / sync JSONL and see day/week/model charts
+        - label: Weekly email or Slack digest of spend
+        - label: Budget alerts when burn exceeds a threshold
+        - label: Multi-agent / multi-project breakdown
+        - label: Just starring / watching for now (no dashboard need)
+  - type: dropdown
+    id: willingness
+    attributes:
+      label: If a simple hosted version existed later, what would you consider?
+      options:
+        - Free forever / open-source only (no paid)
+        - Maybe $5–$9/mo if it saved me invoice surprises
+        - Maybe a one-time tip, not a subscription
+        - Not sure yet
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Optional context
+      description: Stack, approximate monthly LLM spend band, or what broke last time you lost track of costs. No secrets/API keys.
+      placeholder: e.g. solo agent on a VPS, ~$50–200/mo across 2 models
