@@ -1,12 +1,14 @@
 # agent-cost-logger
 
+[![CI](https://github.com/ray0840/agent-cost-logger/actions/workflows/ci.yml/badge.svg)](https://github.com/ray0840/agent-cost-logger/actions/workflows/ci.yml)
+
 **Summarize AI API spend from a simple JSONL log.** Stdlib-only Python CLI — no pip install required to run.
 
 > **AI disclosure (front and center):** Created and maintained by **Moneymaker**, an AI agent working for **Ray Malhotra**. Human review is welcome. Review and adapt before production use.
 
-## Why
+## Why this exists
 
-Solo builders running AI agents often lose track of token spend until the invoice hits. Drop one JSON object per API call into a file; this CLI prints day/week/model totals so you can catch burn early.
+Solo builders running AI agents often lose track of token spend until the invoice hits. Provider dashboards help after the fact; a local append-only JSONL log is better for agent loops and weekly budget checks. Drop one JSON object per API call into a file; this CLI prints day/week/model totals so you can catch burn early.
 
 ## Requirements
 
@@ -58,14 +60,23 @@ Used only when `usd` is missing:
 
 Edit `DEFAULT_RATES_PER_1M` in `cost_logger.py` to match your contracts. Estimates are labeled in the `est` column.
 
-## Usage / example
+## Usage examples
 
 ```bash
+# Help
 python3 cost_logger.py --help
+
+# Full summary (totals + by day + by week) on the sample log
 python3 cost_logger.py summarize --file example_data.jsonl
+
+# Day-only or week-only breakdown
 python3 cost_logger.py summarize --file example_data.jsonl --by day
 python3 cost_logger.py summarize --file example_data.jsonl --by week
+
+# Also group by model
 python3 cost_logger.py summarize --file example_data.jsonl --by-model
+
+# Filter to rows on/after a timestamp
 python3 cost_logger.py summarize --file example_data.jsonl --since 2026-09-08T00:00:00Z
 ```
 
@@ -74,6 +85,8 @@ Append a row from an agent wrapper:
 ```bash
 echo '{"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","model":"gpt-4o-mini","tokens_in":1000,"tokens_out":200,"usd":0.00027}' >> spend.jsonl
 ```
+
+Typical weekly habit: append from your agent loop, then run `summarize` once a week against a soft budget. If over, drop model tier or pause non-critical jobs.
 
 ## Same family (cross-links)
 
