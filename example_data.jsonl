@@ -1,0 +1,20 @@
+{"timestamp": "2026-09-01T09:15:00Z", "model": "gpt-4o-mini", "tokens_in": 12000, "tokens_out": 3000, "usd": 0.0036}
+{"timestamp": "2026-09-01T14:40:00Z", "model": "claude-haiku", "tokens_in": 8000, "tokens_out": 2000}
+{"timestamp": "2026-09-02T10:00:00Z", "model": "gpt-4o", "tokens_in": 25000, "tokens_out": 6000, "usd": 0.1225}
+{"timestamp": "2026-09-02T16:20:00Z", "model": "gemini-flash", "tokens_in": 40000, "tokens_out": 5000}
+{"timestamp": "2026-09-03T08:05:00Z", "model": "claude-sonnet", "tokens_in": 18000, "tokens_out": 7000, "usd": 0.159}
+{"timestamp": "2026-09-03T19:30:00Z", "model": "gpt-4o-mini", "tokens_in": 9000, "tokens_out": 2500, "usd": 0.00285}
+{"timestamp": "2026-09-04T11:11:00Z", "model": "gpt-4o", "tokens_in": 30000, "tokens_out": 8000}
+{"timestamp": "2026-09-04T22:00:00Z", "model": "claude-haiku", "tokens_in": 15000, "tokens_out": 4000, "usd": 0.028}
+{"timestamp": "2026-09-05T07:45:00Z", "model": "gemini-flash", "tokens_in": 55000, "tokens_out": 9000, "usd": 0.0091}
+{"timestamp": "2026-09-05T13:00:00Z", "model": "claude-sonnet", "tokens_in": 22000, "tokens_out": 9000}
+{"timestamp": "2026-09-06T09:00:00Z", "model": "gpt-4o-mini", "tokens_in": 11000, "tokens_out": 2800, "usd": 0.00333}
+{"timestamp": "2026-09-06T15:30:00Z", "model": "gpt-4o", "tokens_in": 16000, "tokens_out": 4500, "usd": 0.085}
+{"timestamp": "2026-09-07T10:10:00Z", "model": "claude-haiku", "tokens_in": 20000, "tokens_out": 6000}
+{"timestamp": "2026-09-08T12:00:00Z", "model": "gemini-flash", "tokens_in": 33000, "tokens_out": 7000, "usd": 0.0061}
+{"timestamp": "2026-09-09T08:20:00Z", "model": "claude-sonnet", "tokens_in": 14000, "tokens_out": 5000, "usd": 0.117}
+{"timestamp": "2026-09-09T18:45:00Z", "model": "gpt-4o-mini", "tokens_in": 7000, "tokens_out": 1500}
+{"timestamp": "2026-09-10T09:00:00Z", "model": "gpt-4o", "tokens_in": 45000, "tokens_out": 12000, "usd": 0.2325}
+{"timestamp": "2026-09-10T20:15:00Z", "model": "claude-sonnet", "tokens_in": 28000, "tokens_out": 11000}
+{"timestamp": "2026-09-11T11:30:00Z", "model": "gemini-flash", "tokens_in": 60000, "tokens_out": 10000, "usd": 0.01}
+{"timestamp": "2026-09-12T16:00:00Z", "model": "gpt-4o-mini", "tokens_in": 13000, "tokens_out": 3200, "usd": 0.00387}
