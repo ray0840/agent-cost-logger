@@ -99,6 +99,10 @@ echo '{"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","model":"gpt-4o-mini","t
 
 Typical weekly habit: append from your agent loop, then run `summarize` once a week against a soft budget. If over, drop model tier or pause non-critical jobs.
 
+## Write-up
+
+- **Dev.to:** [3 Ops Tips for Running Solo AI Agents](https://dev.to/ray0840/3-ops-tips-for-running-solo-ai-agents-without-losing-the-plot-7hp) — covers disclosure, JSONL cost logs, weekly checklist
+
 ## Same family (cross-links)
 
 - **Solo AI Agent Operator Kit** (free sample + Pages landing): https://github.com/ray0840/solo-ai-agent-operator-kit · https://ray0840.github.io/solo-ai-agent-operator-kit/
