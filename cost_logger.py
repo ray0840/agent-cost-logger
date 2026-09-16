@@ -291,11 +291,73 @@ def cmd_budget(args: argparse.Namespace) -> int:
     return exit_code
 
 
+
+def cmd_append(args: argparse.Namespace) -> int:
+    """Append one JSONL spend row; create parent dirs and file if needed."""
+    model = (args.model or "").strip()
+    if not model:
+        print("error: --model must be a non-empty string", file=sys.stderr)
+        return 2
+    try:
+        tokens_in = int(args.tokens_in)
+        tokens_out = int(args.tokens_out)
+    except (TypeError, ValueError) as exc:
+        print(f"error: tokens must be integers: {exc}", file=sys.stderr)
+        return 2
+    if tokens_in < 0 or tokens_out < 0:
+        print("error: --tokens-in and --tokens-out must be >= 0", file=sys.stderr)
+        return 2
+
+    usd = None
+    if args.usd is not None:
+        try:
+            usd = float(args.usd)
+        except (TypeError, ValueError) as exc:
+            print(f"error: bad --usd: {exc}", file=sys.stderr)
+            return 2
+        if usd < 0:
+            print("error: --usd must be >= 0", file=sys.stderr)
+            return 2
+
+    if args.timestamp:
+        try:
+            ts = parse_timestamp(args.timestamp)
+            timestamp = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+        except (TypeError, ValueError) as exc:
+            print(f"error: bad --timestamp: {exc}", file=sys.stderr)
+            return 2
+    else:
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    row: Dict[str, Any] = {
+        "timestamp": timestamp,
+        "model": model,
+        "tokens_in": tokens_in,
+        "tokens_out": tokens_out,
+    }
+    if usd is not None:
+        row["usd"] = usd
+
+    line = json.dumps(row, separators=(",", ":"), ensure_ascii=False) + "\n"
+    path = Path(args.file)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(line)
+    except OSError as exc:
+        print(f"error: could not write {path}: {exc}", file=sys.stderr)
+        return 2
+
+    if args.print:
+        sys.stdout.write(line)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cost_logger.py",
         description=(
-            "Summarize AI API spend from JSONL logs. "
+            "Append and summarize AI API spend from JSONL logs. "
             "Each line: {timestamp, model, tokens_in, tokens_out, usd?}."
         ),
     )
@@ -390,6 +452,54 @@ def build_parser() -> argparse.ArgumentParser:
         help="Only include rows on/after this ISO timestamp",
     )
     budget.set_defaults(func=cmd_budget)
+
+
+    append = sub.add_parser(
+        "append",
+        aliases=["log"],
+        help="Append one JSONL spend row (agent-loop friendly)",
+    )
+    append.add_argument(
+        "--file",
+        "-f",
+        required=True,
+        help="Path to JSONL spend log (created if missing)",
+    )
+    append.add_argument(
+        "--model",
+        required=True,
+        help="Model name (non-empty)",
+    )
+    append.add_argument(
+        "--tokens-in",
+        type=int,
+        required=True,
+        dest="tokens_in",
+        help="Input tokens (integer >= 0)",
+    )
+    append.add_argument(
+        "--tokens-out",
+        type=int,
+        required=True,
+        dest="tokens_out",
+        help="Output tokens (integer >= 0)",
+    )
+    append.add_argument(
+        "--usd",
+        type=float,
+        default=None,
+        help="USD cost (omit to let summarize estimate)",
+    )
+    append.add_argument(
+        "--timestamp",
+        help="ISO-8601 timestamp (default: now UTC with Z)",
+    )
+    append.add_argument(
+        "--print",
+        action="store_true",
+        help="Also print the written JSON line to stdout",
+    )
+    append.set_defaults(func=cmd_append)
 
     return parser
 

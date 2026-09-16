@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import json
 import io
 import tempfile
 import unittest
@@ -140,6 +141,92 @@ class TestBudget(unittest.TestCase):
         wlabel, wsel = cl.select_budget_rows(rows, "week")
         self.assertEqual(wlabel, "week 2026-W37")
         self.assertEqual(len(wsel), 8)
+
+
+
+
+class TestAppend(unittest.TestCase):
+    def test_append_creates_file_with_required_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "nested" / "spend.jsonl"
+            args = Namespace(
+                file=str(log_path),
+                model="gpt-4o-mini",
+                tokens_in=1000,
+                tokens_out=200,
+                usd=None,
+                timestamp="2026-09-16T12:00:00Z",
+                print=False,
+            )
+            self.assertEqual(cl.cmd_append(args), 0)
+            self.assertTrue(log_path.is_file())
+            lines = log_path.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(lines), 1)
+            obj = json.loads(lines[0])
+            self.assertEqual(obj["timestamp"], "2026-09-16T12:00:00Z")
+            self.assertEqual(obj["model"], "gpt-4o-mini")
+            self.assertEqual(obj["tokens_in"], 1000)
+            self.assertEqual(obj["tokens_out"], 200)
+            self.assertNotIn("usd", obj)
+
+    def test_append_with_usd_includes_usd(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "spend.jsonl"
+            args = Namespace(
+                file=str(log_path),
+                model="gpt-4o",
+                tokens_in=10,
+                tokens_out=5,
+                usd=0.0123,
+                timestamp="2026-09-16T12:00:00Z",
+                print=False,
+            )
+            self.assertEqual(cl.cmd_append(args), 0)
+            obj = json.loads(log_path.read_text(encoding="utf-8").strip())
+            self.assertIn("usd", obj)
+            self.assertAlmostEqual(obj["usd"], 0.0123)
+
+    def test_append_without_usd_omits_usd_key(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "spend.jsonl"
+            args = Namespace(
+                file=str(log_path),
+                model="claude-haiku",
+                tokens_in=0,
+                tokens_out=0,
+                usd=None,
+                timestamp="2026-09-16T12:00:00Z",
+                print=False,
+            )
+            self.assertEqual(cl.cmd_append(args), 0)
+            obj = json.loads(log_path.read_text(encoding="utf-8").strip())
+            self.assertNotIn("usd", obj)
+
+    def test_append_negative_tokens_exit_2(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "spend.jsonl"
+            args = Namespace(
+                file=str(log_path),
+                model="gpt-4o",
+                tokens_in=-1,
+                tokens_out=5,
+                usd=None,
+                timestamp=None,
+                print=False,
+            )
+            self.assertEqual(cl.cmd_append(args), 2)
+            self.assertFalse(log_path.exists())
+            args2 = Namespace(
+                file=str(log_path),
+                model="gpt-4o",
+                tokens_in=1,
+                tokens_out=-5,
+                usd=None,
+                timestamp=None,
+                print=False,
+            )
+            self.assertEqual(cl.cmd_append(args2), 2)
+            self.assertFalse(log_path.exists())
 
 
 

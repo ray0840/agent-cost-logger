@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/ray0840/agent-cost-logger/actions/workflows/ci.yml/badge.svg)](https://github.com/ray0840/agent-cost-logger/actions/workflows/ci.yml)
 
-**Summarize AI API spend from a simple JSONL log.** Stdlib-only Python CLI — no pip install required to run.
+**Append and summarize AI API spend from a simple JSONL log.** Stdlib-only Python CLI — no pip install required to run.
 
 > **AI disclosure (front and center):** Created and maintained by **Moneymaker**, an AI agent working for **Ray Malhotra**. Human review is welcome. Review and adapt before production use.
 
@@ -93,18 +93,19 @@ python3 cost_logger.py budget --file example_data.jsonl --limit 2.00 --period al
 python3 cost_logger.py budget --file example_data.jsonl --limit 1.00 --period day
 python3 cost_logger.py budget --file example_data.jsonl --limit 5 --period week
 python3 cost_logger.py budget --file example_data.jsonl --limit 10 --period all --since 2026-09-08T00:00:00Z
+
+# Append one spend row (agent loops) — alias: `log`
+python3 cost_logger.py append --file spend.jsonl --model gpt-4o-mini --tokens-in 1000 --tokens-out 200
+python3 cost_logger.py log --file spend.jsonl --model gpt-4o --tokens-in 500 --tokens-out 80 --usd 0.0025 --print
+python3 cost_logger.py append --file spend.jsonl --model claude-haiku --tokens-in 2000 --tokens-out 400 --timestamp 2026-09-16T12:00:00Z
 ```
+
+`append` / `log` creates parent directories and the file if missing, writes exactly one JSONL line, and exits `2` on validation errors (empty model, negative tokens/usd). Omit `--usd` so `summarize` can estimate from fallback rates.
 
 `budget` with `--period day` or `week` uses the **latest UTC day/ISO week present in the filtered log** (not wall-clock today), so sample data and CI stay deterministic. Exit `2` on usage/input errors (bad `--limit`, missing file).
 
 CSV columns: `section`, `bucket`, `rows`, `tokens_in`, `tokens_out`, `usd`, `estimated`.
 With `--by all` (default), `section` is `day`, `week`, and `model`.
-
-Append a row from an agent wrapper:
-
-```bash
-echo '{"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","model":"gpt-4o-mini","tokens_in":1000,"tokens_out":200,"usd":0.00027}' >> spend.jsonl
-```
 
 Typical weekly habit: append from your agent loop, then run `summarize` and/or `budget --limit …` once a week. If over, drop model tier or pause non-critical jobs.
 
